@@ -242,6 +242,77 @@ function renderLeague(league, listElement) {
   });
 }
 
+function refreshLeagueRowMeta(listElement) {
+  const league = listElement.dataset.league;
+  [...listElement.querySelectorAll(".team-row")].forEach((row, index) => {
+    row.querySelector(".rank").textContent = String(index + 1);
+    row.querySelector(".position-markers").innerHTML = renderMarkerBadges(getPositionMarkers(league, index));
+  });
+}
+
+function rowRects(listElement) {
+  return new Map(
+    [...listElement.querySelectorAll(".team-row")].map((row) => [
+      row.dataset.id,
+      row.getBoundingClientRect(),
+    ]),
+  );
+}
+
+function animateRowsFrom(listElement, beforeRects) {
+  const rows = [...listElement.querySelectorAll(".team-row")];
+  rows.forEach((row) => {
+    const before = beforeRects.get(row.dataset.id);
+    if (!before) return;
+
+    const after = row.getBoundingClientRect();
+    const deltaX = before.left - after.left;
+    const deltaY = before.top - after.top;
+    if (!deltaX && !deltaY) return;
+
+    row.style.transition = "none";
+    row.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+  });
+
+  requestAnimationFrame(() => {
+    rows.forEach((row) => {
+      row.style.transition = "transform 210ms cubic-bezier(.2,.8,.2,1)";
+      row.style.transform = "";
+    });
+  });
+}
+
+function reorderPreview(source, target, after) {
+  const listElement = source.closest(".team-list");
+  if (!listElement || source === target) return;
+
+  const beforeRects = rowRects(listElement);
+  const reference = after ? target.nextSibling : target;
+  if (reference === source || source.nextSibling === reference) return;
+
+  listElement.insertBefore(source, reference);
+  refreshLeagueRowMeta(listElement);
+  animateRowsFrom(listElement, beforeRects);
+}
+
+function commitDomOrder(listElement) {
+  const league = listElement.dataset.league;
+  state[league] = [...listElement.querySelectorAll(".team-row")].map((row) => row.dataset.id);
+  saveState();
+  refreshLeagueRowMeta(listElement);
+}
+
+function setLeagueOrder(league, order, animate = false) {
+  const listElement = document.querySelector(`.team-list[data-league="${league}"]`);
+  const beforeRects = animate ? rowRects(listElement) : null;
+  state[league] = order;
+  saveState();
+  renderLeague(league, listElement);
+  if (animate) {
+    animateRowsFrom(listElement, beforeRects);
+  }
+}
+
 function getPositionMarkers(league, index) {
   return positionMarkers[league][index + 1] ?? [];
 }
@@ -313,11 +384,8 @@ function onDrop(event) {
   const order = state[league].filter((id) => id !== dragged.id);
   const targetIndex = order.indexOf(target.dataset.id);
   order.splice(targetIndex + (after ? 1 : 0), 0, dragged.id);
-  state[league] = order;
-
-  saveState();
   clearDropMarkers();
-  render();
+  setLeagueOrder(league, order, true);
 }
 
 function onDragEnd() {
@@ -339,6 +407,7 @@ function onPointerDown(event) {
     id: row.dataset.id,
     league: row.dataset.league,
     source: row,
+    list: row.closest(".team-list"),
     startX: event.clientX,
     startY: event.clientY,
     targetId: null,
@@ -370,6 +439,7 @@ function onPointerMove(event) {
   const rect = row.getBoundingClientRect();
   pointerDrag.after = event.clientY > rect.top + rect.height / 2;
   pointerDrag.targetId = row.dataset.id;
+  reorderPreview(pointerDrag.source, row, pointerDrag.after);
   row.classList.add(pointerDrag.after ? "drop-after" : "drop-before");
   event.preventDefault();
 }
@@ -379,13 +449,8 @@ function onPointerUp(event) {
   const current = pointerDrag;
   current.source.releasePointerCapture(event.pointerId);
 
-  if (current.active && current.targetId) {
-    const order = state[current.league].filter((id) => id !== current.id);
-    const targetIndex = order.indexOf(current.targetId);
-    order.splice(targetIndex + (current.after ? 1 : 0), 0, current.id);
-    state[current.league] = order;
-    saveState();
-    render();
+  if (current.active) {
+    commitDomOrder(current.list);
   }
 
   pointerDrag = null;
@@ -530,12 +595,7 @@ async function drawLeagueExport(ctx, league, x, y, width, height) {
   for (const [index, teamId] of state[league].entries()) {
     const team = getTeam(league, teamId);
     const markers = getPositionMarkers(league, index);
-    drawRoundedRect(ctx, x + 16, rowY, width - 32, 50, 7, team.bg);
-    ctx.save();
-    ctx.globalAlpha = 0.2;
-    ctx.fillStyle = team.accent;
-    ctx.fillRect(x + 16, rowY, 102, 50);
-    ctx.restore();
+    drawTeamRowBackground(ctx, x + 16, rowY, width - 32, 50, 7, team);
 
     ctx.fillStyle = team.ink;
     ctx.font = "900 18px Arial, sans-serif";
@@ -552,6 +612,40 @@ async function drawLeagueExport(ctx, league, x, y, width, height) {
     ctx.fillText(team.name, x + 112, rowY + 32);
     rowY += 58;
   }
+}
+
+function drawTeamRowBackground(ctx, x, y, width, height, radius, team) {
+  drawRoundedRect(ctx, x, y, width, height, radius, team.bg);
+
+  ctx.save();
+  roundedPath(ctx, x, y, width, height, radius);
+  ctx.clip();
+
+  const rowGradient = ctx.createLinearGradient(x, y, x + width, y);
+  rowGradient.addColorStop(0, hexToRgba(team.accent, 0.18));
+  rowGradient.addColorStop(0.48, hexToRgba(team.accent, 0));
+  ctx.fillStyle = rowGradient;
+  ctx.fillRect(x, y, width, height);
+
+  const leftGradient = ctx.createLinearGradient(x, y, x + 108, y);
+  leftGradient.addColorStop(0, hexToRgba(team.accent, 0.32));
+  leftGradient.addColorStop(1, hexToRgba(team.accent, 0.12));
+  ctx.fillStyle = leftGradient;
+  ctx.fillRect(x, y, 108, height);
+
+  ctx.restore();
+}
+
+function hexToRgba(hex, alpha) {
+  const clean = hex.replace("#", "");
+  const full = clean.length === 3
+    ? clean.split("").map((char) => char + char).join("")
+    : clean;
+  const value = Number.parseInt(full, 16);
+  const red = (value >> 16) & 255;
+  const green = (value >> 8) & 255;
+  const blue = value & 255;
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
 
 function drawExportMarkers(ctx, markers, rightX, y) {

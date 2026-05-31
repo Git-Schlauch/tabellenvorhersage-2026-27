@@ -253,6 +253,7 @@ h2 {
 
 .team-row.dragging {
   opacity: 0.45;
+  pointer-events: none;
 }
 
 .team-row.drop-before::before,
