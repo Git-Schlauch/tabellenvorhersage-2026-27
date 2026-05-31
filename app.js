@@ -213,7 +213,7 @@ function renderLeague(league, listElement) {
     const markers = getPositionMarkers(league, index);
     const row = document.createElement("li");
     row.className = "team-row";
-    row.draggable = true;
+    row.draggable = false;
     row.tabIndex = 0;
     row.dataset.id = team.id;
     row.dataset.league = league;
@@ -229,15 +229,7 @@ function renderLeague(league, listElement) {
       <span class="drag-handle" aria-hidden="true">${"<span></span>".repeat(6)}</span>
     `;
 
-    row.addEventListener("dragstart", onDragStart);
-    row.addEventListener("dragover", onDragOver);
-    row.addEventListener("dragleave", clearDropMarkers);
-    row.addEventListener("drop", onDrop);
-    row.addEventListener("dragend", onDragEnd);
     row.addEventListener("pointerdown", onPointerDown);
-    row.addEventListener("pointermove", onPointerMove);
-    row.addEventListener("pointerup", onPointerUp);
-    row.addEventListener("pointercancel", onPointerCancel);
     listElement.appendChild(row);
   });
 }
@@ -403,7 +395,9 @@ function clearDropMarkers() {
 function onPointerDown(event) {
   if (event.button !== 0) return;
   const row = event.currentTarget;
+  event.preventDefault();
   pointerDrag = {
+    pointerId: event.pointerId,
     id: row.dataset.id,
     league: row.dataset.league,
     source: row,
@@ -414,11 +408,14 @@ function onPointerDown(event) {
     after: false,
     active: false,
   };
-  row.setPointerCapture(event.pointerId);
+  row.setPointerCapture?.(event.pointerId);
+  document.addEventListener("pointermove", onPointerMove);
+  document.addEventListener("pointerup", onPointerUp);
+  document.addEventListener("pointercancel", onPointerCancel);
 }
 
 function onPointerMove(event) {
-  if (!pointerDrag) return;
+  if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
 
   const distance = Math.hypot(event.clientX - pointerDrag.startX, event.clientY - pointerDrag.startY);
   if (distance < 6 && !pointerDrag.active) return;
@@ -427,9 +424,10 @@ function onPointerMove(event) {
   pointerDrag.source.classList.add("dragging");
   clearDropMarkers();
 
-  const row = document
-    .elementFromPoint(event.clientX, event.clientY)
-    ?.closest(".team-row");
+  const previousPointerEvents = pointerDrag.source.style.pointerEvents;
+  pointerDrag.source.style.pointerEvents = "none";
+  const row = document.elementFromPoint(event.clientX, event.clientY)?.closest(".team-row");
+  pointerDrag.source.style.pointerEvents = previousPointerEvents;
 
   if (!row || row.dataset.league !== pointerDrag.league || row.dataset.id === pointerDrag.id) {
     pointerDrag.targetId = null;
@@ -445,21 +443,28 @@ function onPointerMove(event) {
 }
 
 function onPointerUp(event) {
-  if (!pointerDrag) return;
+  if (!pointerDrag || event.pointerId !== pointerDrag.pointerId) return;
   const current = pointerDrag;
-  current.source.releasePointerCapture(event.pointerId);
+  if (current.source.hasPointerCapture?.(event.pointerId)) {
+    current.source.releasePointerCapture(event.pointerId);
+  }
 
   if (current.active) {
     commitDomOrder(current.list);
   }
 
-  pointerDrag = null;
-  clearDropMarkers();
-  document.querySelectorAll(".dragging").forEach((node) => node.classList.remove("dragging"));
+  finishPointerDrag();
 }
 
 function onPointerCancel() {
+  finishPointerDrag();
+}
+
+function finishPointerDrag() {
   pointerDrag = null;
+  document.removeEventListener("pointermove", onPointerMove);
+  document.removeEventListener("pointerup", onPointerUp);
+  document.removeEventListener("pointercancel", onPointerCancel);
   clearDropMarkers();
   document.querySelectorAll(".dragging").forEach((node) => node.classList.remove("dragging"));
 }
