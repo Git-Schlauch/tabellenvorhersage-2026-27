@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tabellenvorhersage Saison 2026/27</title>
+    <link rel="stylesheet" href="./styles.css?v=league-logos-author" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Bundesliga Predictor</p>
+        <h1>Tabellenvorhersage Saison 2026/27</h1>
+        <label class="author-field" for="authorInput">
+          <span>Von:</span>
+          <input id="authorInput" type="text" maxlength="40" placeholder="Dein Name" autocomplete="name" />
+        </label>
+      </div>
+      <div class="actions" aria-label="Exportaktionen">
+        <button id="resetButton" class="ghost" type="button">Zurücksetzen</button>
+        <button id="pngButton" type="button">PNG exportieren</button>
+        <button id="pdfButton" type="button">PDF exportieren</button>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="league-grid" aria-label="Tabellenvorhersagen">
+        <article class="league-panel">
+          <div class="league-header">
+            <div class="league-title">
+              <img class="league-logo" src="./germany_bundesliga.football-logos.cc.svg" alt="Logo 1. Bundesliga" />
+              <div>
+                <p class="league-kicker">1. Bundesliga</p>
+                <h2>Deine Tabelle</h2>
+              </div>
+            </div>
+            <span class="pill">18 Teams</span>
+          </div>
+          <ol id="bundesligaList" class="team-list" data-league="bundesliga"></ol>
+        </article>
+
+        <article class="league-panel">
+          <div class="league-header">
+            <div class="league-title">
+              <img class="league-logo" src="./germany_2-bundesliga.football-logos.cc.svg" alt="Logo 2. Bundesliga" />
+              <div>
+                <p class="league-kicker">2. Bundesliga</p>
+                <h2>Deine Tabelle</h2>
+              </div>
+            </div>
+            <span class="pill">18 Teams</span>
+          </div>
+          <ol id="zweiteList" class="team-list" data-league="zweite"></ol>
+        </article>
+      </section>
+
+      <section class="takes-grid" aria-label="Hot Takes">
+        <article class="takes-panel">
+          <div class="league-header">
+            <div class="league-title">
+              <img class="league-logo compact" src="./germany_bundesliga.football-logos.cc.svg" alt="Logo 1. Bundesliga" />
+              <div>
+                <p class="league-kicker">1. Bundesliga</p>
+                <h2>Hot Takes</h2>
+              </div>
+            </div>
+          </div>
+          <div class="take-stack" data-league="bundesliga"></div>
+        </article>
+
+        <article class="takes-panel">
+          <div class="league-header">
+            <div class="league-title">
+              <img class="league-logo compact" src="./germany_2-bundesliga.football-logos.cc.svg" alt="Logo 2. Bundesliga" />
+              <div>
+                <p class="league-kicker">2. Bundesliga</p>
+                <h2>Hot Takes</h2>
+              </div>
+            </div>
+          </div>
+          <div class="take-stack" data-league="zweite"></div>
+        </article>
+      </section>
+    </main>
+
+    <script src="./app.js?v=league-logos-author"></script>
+  </body>
+</html>

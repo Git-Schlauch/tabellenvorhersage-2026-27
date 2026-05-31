@@ -1,0 +1,10 @@
+.DS_Store
+**/.DS_Store
+
+# Local environment
+.env
+
+# Logs and temporary files
+*.log
+tmp/
+dist/

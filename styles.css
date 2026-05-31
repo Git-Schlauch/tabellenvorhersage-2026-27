@@ -1,0 +1,472 @@
+:root {
+  color-scheme: light;
+  --bg: #eef1f4;
+  --ink: #111827;
+  --muted: #627084;
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel-solid: #ffffff;
+  --line: rgba(20, 28, 40, 0.12);
+  --shadow: 0 22px 60px rgba(18, 25, 38, 0.12);
+  --focus: #0f766e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.13), transparent 36%),
+    linear-gradient(315deg, rgba(220, 38, 38, 0.09), transparent 34%),
+    var(--bg);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--ink);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 7px;
+  padding: 0 16px;
+  color: #ffffff;
+  background: #111827;
+  cursor: pointer;
+  transition:
+    transform 140ms ease,
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.18);
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+.team-row:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--focus) 48%, transparent);
+  outline-offset: 3px;
+}
+
+button.ghost {
+  color: #111827;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line);
+}
+
+.topbar {
+  width: min(1480px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 18px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.eyebrow,
+.league-kicker {
+  margin: 0 0 5px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  line-height: 1.04;
+}
+
+h1 {
+  max-width: 820px;
+  font-size: clamp(2.2rem, 4.2vw, 5.25rem);
+}
+
+h2 {
+  font-size: 1.22rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.author-field {
+  width: min(360px, 100%);
+  min-height: 44px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.author-field span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.author-field input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  font-weight: 850;
+}
+
+.author-field:focus-within {
+  border-color: color-mix(in srgb, var(--focus) 56%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 20%, transparent);
+}
+
+.page-shell {
+  width: min(1480px, calc(100% - 32px));
+  margin: 0 auto 42px;
+}
+
+.league-grid,
+.takes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.takes-grid {
+  margin-top: 18px;
+}
+
+.league-panel,
+.takes-panel {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.league-header {
+  min-height: 44px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.league-title {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.league-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 6px 12px rgba(18, 25, 38, 0.14));
+}
+
+.league-logo.compact {
+  width: 44px;
+  height: 44px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.team-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.team-row {
+  --club-bg: #ffffff;
+  --club-ink: #111827;
+  --club-accent: #111827;
+  position: relative;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 38px 48px minmax(0, 1fr) minmax(86px, auto) 28px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 7px;
+  padding: 8px 10px;
+  color: var(--club-ink);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--club-accent) 16%, transparent), transparent 48%),
+    var(--club-bg);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.team-row:active {
+  cursor: grabbing;
+}
+
+.team-row.dragging {
+  opacity: 0.45;
+}
+
+.team-row.drop-before::before,
+.team-row.drop-after::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  left: 10px;
+  height: 3px;
+  border-radius: 999px;
+  background: #111827;
+}
+
+.team-row.drop-before::before {
+  top: -6px;
+}
+
+.team-row.drop-after::after {
+  bottom: -6px;
+}
+
+.rank {
+  color: color-mix(in srgb, var(--club-ink) 84%, transparent);
+  font-weight: 950;
+  text-align: right;
+}
+
+.crest {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.22));
+}
+
+.club-name {
+  overflow: hidden;
+  font-size: clamp(0.92rem, 1.5vw, 1.14rem);
+  font-weight: 900;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.position-markers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.marker {
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  padding: 0 7px;
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.14);
+}
+
+.crown {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.marker-champion {
+  color: #2f2100;
+  background: #f8c24e;
+}
+
+.marker-cl {
+  color: #ffffff;
+  background: #2563eb;
+}
+
+.marker-el {
+  color: #111827;
+  background: #f97316;
+}
+
+.marker-ecl {
+  color: #ffffff;
+  background: #16a34a;
+}
+
+.marker-up {
+  color: #ffffff;
+  background: #0f766e;
+}
+
+.marker-playoff {
+  color: #111827;
+  background: #eab308;
+}
+
+.marker-down {
+  color: #ffffff;
+  background: #dc2626;
+}
+
+.drag-handle {
+  display: grid;
+  grid-template-columns: repeat(2, 4px);
+  gap: 4px;
+  justify-content: center;
+}
+
+.drag-handle span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--club-ink) 58%, transparent);
+}
+
+.take-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.take-field {
+  position: relative;
+}
+
+.take-field label {
+  position: absolute;
+  top: 11px;
+  left: 12px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 900;
+  pointer-events: none;
+}
+
+.take-field textarea {
+  width: 100%;
+  min-height: 82px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 32px 12px 12px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.78);
+  line-height: 1.35;
+}
+
+@media (max-width: 980px) {
+  .topbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .actions {
+    justify-content: flex-start;
+  }
+
+  .league-grid,
+  .takes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar,
+  .page-shell {
+    width: min(100% - 20px, 1480px);
+  }
+
+  .league-panel,
+  .takes-panel {
+    padding: 12px;
+  }
+
+  .team-row {
+    grid-template-columns: 30px 42px minmax(0, 1fr) 20px;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .position-markers {
+    grid-column: 3 / 4;
+    justify-content: flex-start;
+  }
+
+  .drag-handle {
+    grid-column: 4;
+    grid-row: 1 / span 2;
+  }
+
+  .crest {
+    width: 38px;
+    height: 38px;
+  }
+
+  .actions button {
+    flex: 1 1 150px;
+  }
+
+  .league-logo {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .topbar .actions {
+    display: none;
+  }
+}
