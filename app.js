@@ -428,7 +428,7 @@ function onPointerMove(event) {
   pointerDrag.source.classList.add("dragging");
   pointerDrag.lastX = event.clientX;
   pointerDrag.lastY = event.clientY;
-  pointerDrag.source.style.transform = `translate(${event.clientX - pointerDrag.startX}px, ${event.clientY - pointerDrag.startY}px) scale(1.015)`;
+  pointerDrag.source.style.transform = "scale(1.015)";
   clearDropMarkers();
 
   const previousPointerEvents = pointerDrag.source.style.pointerEvents;
