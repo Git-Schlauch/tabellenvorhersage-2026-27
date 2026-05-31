@@ -254,6 +254,7 @@ function rowRects(listElement) {
 function animateRowsFrom(listElement, beforeRects) {
   const rows = [...listElement.querySelectorAll(".team-row")];
   rows.forEach((row) => {
+    if (row.classList.contains("dragging")) return;
     const before = beforeRects.get(row.dataset.id);
     if (!before) return;
 
@@ -268,6 +269,7 @@ function animateRowsFrom(listElement, beforeRects) {
 
   requestAnimationFrame(() => {
     rows.forEach((row) => {
+      if (row.classList.contains("dragging")) return;
       row.style.transition = "transform 210ms cubic-bezier(.2,.8,.2,1)";
       row.style.transform = "";
     });
@@ -404,6 +406,8 @@ function onPointerDown(event) {
     list: row.closest(".team-list"),
     startX: event.clientX,
     startY: event.clientY,
+    lastX: event.clientX,
+    lastY: event.clientY,
     targetId: null,
     after: false,
     active: false,
@@ -422,6 +426,9 @@ function onPointerMove(event) {
 
   pointerDrag.active = true;
   pointerDrag.source.classList.add("dragging");
+  pointerDrag.lastX = event.clientX;
+  pointerDrag.lastY = event.clientY;
+  pointerDrag.source.style.transform = `translate(${event.clientX - pointerDrag.startX}px, ${event.clientY - pointerDrag.startY}px) scale(1.015)`;
   clearDropMarkers();
 
   const previousPointerEvents = pointerDrag.source.style.pointerEvents;
@@ -453,6 +460,7 @@ function onPointerUp(event) {
     commitDomOrder(current.list);
   }
 
+  current.source.style.transform = "";
   finishPointerDrag();
 }
 
@@ -461,6 +469,9 @@ function onPointerCancel() {
 }
 
 function finishPointerDrag() {
+  if (pointerDrag?.source) {
+    pointerDrag.source.style.transform = "";
+  }
   pointerDrag = null;
   document.removeEventListener("pointermove", onPointerMove);
   document.removeEventListener("pointerup", onPointerUp);
