@@ -1,5 +1,6 @@
 const STORAGE_KEY = "tabellenvorhersage-2026-27";
 const SUBMISSIONS_KEY = "tabellenvorhersage-2026-27-submissions";
+const SUBMISSIONS_API = "/api/submissions";
 const BUNDESLIGA_LOGOS = "germany-bundesliga-2025-2026.football-logos.cc/128x128";
 const ZWEITE_LOGOS = "germany-2-bundesliga-2025-2026.football-logos.cc/128x128";
 const leagueLogos = {
@@ -140,7 +141,7 @@ const teams = {
 
 let state = loadState();
 let pointerDrag = null;
-let submissions = loadSubmissions();
+let submissions = loadLocalSubmissions();
 
 function club(name, short, bg, ink, accent, shape, fontStyle) {
   const id = slug(name);
@@ -187,7 +188,7 @@ function loadState() {
   }
 }
 
-function loadSubmissions() {
+function loadLocalSubmissions() {
   try {
     const stored = JSON.parse(localStorage.getItem(SUBMISSIONS_KEY));
     return Array.isArray(stored) ? stored : [];
@@ -221,8 +222,21 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function saveSubmissions() {
+function saveLocalSubmissions() {
   localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions));
+}
+
+async function loadSubmissionsFromApi() {
+  try {
+    const response = await fetch(SUBMISSIONS_API, { cache: "no-store" });
+    if (!response.ok) throw new Error("Einreichungen konnten nicht geladen werden.");
+    submissions = await response.json();
+    saveLocalSubmissions();
+    renderSubmissions();
+  } catch (error) {
+    console.warn(error.message);
+    renderSubmissions();
+  }
 }
 
 function getTeam(league, id) {
@@ -435,12 +449,31 @@ function snapshotLeague(league) {
   };
 }
 
-function submitPrediction() {
+async function submitPrediction() {
   const submission = createSubmission();
-  submissions = [submission, ...submissions];
-  saveSubmissions();
-  renderSubmissions();
-  showSubmissionsPage();
+  const button = document.querySelector("#submitButton");
+  button.disabled = true;
+  button.textContent = "Wird eingereicht...";
+
+  try {
+    const response = await fetch(SUBMISSIONS_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(submission),
+    });
+    if (!response.ok) throw new Error("Einreichen fehlgeschlagen.");
+    const payload = await response.json();
+    submissions = payload.submissions;
+  } catch (error) {
+    console.warn(error.message);
+    submissions = [submission, ...submissions];
+  } finally {
+    saveLocalSubmissions();
+    renderSubmissions();
+    showSubmissionsPage();
+    button.disabled = false;
+    button.textContent = "Prediction einreichen";
+  }
 }
 
 function renderSubmissions() {
@@ -1014,3 +1047,4 @@ window.__predictor = {
 };
 
 render();
+loadSubmissionsFromApi();

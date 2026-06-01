@@ -56,6 +56,12 @@ button:hover {
   box-shadow: 0 12px 28px rgba(17, 24, 39, 0.18);
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
+}
+
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
@@ -68,6 +74,25 @@ button.ghost {
   color: #111827;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid var(--line);
+}
+
+#submitButton {
+  color: #ffffff;
+  background: #0f766e;
+}
+
+#submitButton:hover {
+  box-shadow: 0 12px 28px rgba(15, 118, 110, 0.24);
+}
+
+#backButton {
+  color: #ffffff;
+  background: #2563eb;
+  border-color: transparent;
+}
+
+#backButton:hover {
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.24);
 }
 
 .topbar {

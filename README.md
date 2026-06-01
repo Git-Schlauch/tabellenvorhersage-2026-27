@@ -1,6 +1,11 @@
 # Tabellenvorhersage Saison 2026/27
 
-Statische Website fuer Bundesliga- und 2. Bundesliga-Predictions mit Drag-and-drop-Tabellen, Hot Takes, Zusatz-Predictions, Autorenfeld, lokaler Einreichungsliste und PNG-Export.
+Website fuer Bundesliga- und 2. Bundesliga-Predictions mit Drag-and-drop-Tabellen, Hot Takes, Zusatz-Predictions, Autorenfeld, gemeinsamer Einreichungsliste und PNG-Export.
+
+Die App besteht aus zwei Containern:
+
+- `tabellenvorhersage`: Nginx fuer Frontend und `/api`-Proxy
+- `tabellenvorhersage-api`: kleine Node-API, speichert Einreichungen im Docker-Volume `submissions-data`
 
 ## Lokal mit Docker starten
 
@@ -25,3 +30,5 @@ APP_PORT=8080 docker compose up -d --build
 ```
 
 Wenn du einen Reverse Proxy nutzt, leite deine Domain auf `http://127.0.0.1:8080` weiter.
+
+Die eingereichten Predictions bleiben im Docker-Volume erhalten. Bei Dockge den Stack also normal neu erstellen/recreaten, aber das Volume nicht loeschen.
