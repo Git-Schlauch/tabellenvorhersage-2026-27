@@ -1,6 +1,6 @@
 # Tabellenvorhersage Saison 2026/27
 
-Statische Website fuer Bundesliga- und 2. Bundesliga-Predictions mit Drag-and-drop-Tabellen, Hot Takes, Autorenfeld und PNG/PDF-Export.
+Statische Website fuer Bundesliga- und 2. Bundesliga-Predictions mit Drag-and-drop-Tabellen, Hot Takes, Zusatz-Predictions, Autorenfeld, lokaler Einreichungsliste und PNG-Export.
 
 ## Lokal mit Docker starten
 

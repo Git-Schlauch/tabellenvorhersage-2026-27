@@ -151,6 +151,10 @@ h2 {
   margin: 0 auto 42px;
 }
 
+.is-hidden {
+  display: none;
+}
+
 .league-grid,
 .takes-grid {
   display: grid;
@@ -388,6 +392,13 @@ h2 {
   gap: 10px;
 }
 
+.prediction-stack {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .take-field {
   position: relative;
 }
@@ -414,6 +425,175 @@ h2 {
   line-height: 1.35;
 }
 
+.prediction-field {
+  min-height: 76px;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.prediction-field span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.prediction-field input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: var(--ink);
+  background: transparent;
+  font-weight: 800;
+}
+
+.submissions-panel {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.submissions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.submissions-header h2 {
+  font-size: 2rem;
+}
+
+.submissions-list {
+  display: grid;
+  gap: 12px;
+}
+
+.empty-state {
+  min-height: 140px;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-state strong {
+  color: var(--ink);
+}
+
+.submission-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+  overflow: hidden;
+}
+
+.submission-card summary {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.submission-card summary span:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.submission-card small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.summary-pill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.submission-detail-grid {
+  display: grid;
+  gap: 14px;
+  padding: 0 14px 14px;
+}
+
+.submission-league {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.submission-league h3,
+.submission-league h4 {
+  margin: 0;
+}
+
+.submission-columns {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(320px, 1.15fr);
+  gap: 18px;
+}
+
+.submission-table,
+.submission-takes {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 16px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.submission-table li,
+.submission-takes li,
+.submission-prediction {
+  border: 1px solid rgba(20, 28, 40, 0.08);
+  border-radius: 7px;
+  padding: 8px 10px;
+  background: #ffffff;
+}
+
+.submission-table em {
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 850;
+}
+
+.submission-predictions {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.submission-prediction {
+  display: grid;
+  gap: 4px;
+}
+
+.submission-prediction span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
 @media (max-width: 980px) {
   .topbar {
     align-items: stretch;
@@ -426,6 +606,11 @@ h2 {
 
   .league-grid,
   .takes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .submission-columns,
+  .submission-predictions {
     grid-template-columns: 1fr;
   }
 }
@@ -464,6 +649,15 @@ h2 {
 
   .actions button {
     flex: 1 1 150px;
+  }
+
+  .prediction-stack {
+    grid-template-columns: 1fr;
+  }
+
+  .submissions-header {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .league-logo {

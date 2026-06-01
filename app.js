@@ -1,4 +1,5 @@
 const STORAGE_KEY = "tabellenvorhersage-2026-27";
+const SUBMISSIONS_KEY = "tabellenvorhersage-2026-27-submissions";
 const BUNDESLIGA_LOGOS = "germany-bundesliga-2025-2026.football-logos.cc/128x128";
 const ZWEITE_LOGOS = "germany-2-bundesliga-2025-2026.football-logos.cc/128x128";
 const leagueLogos = {
@@ -43,6 +44,17 @@ const markerColors = {
   playoff: { bg: "#eab308", ink: "#111827" },
   down: { bg: "#dc2626", ink: "#ffffff" },
 };
+
+const predictionFields = [
+  { key: "player", label: "Spieler der Saison", placeholder: "Name des Spielers" },
+  { key: "newcomer", label: "Newcomer der Saison (U23)", placeholder: "Name des Spielers" },
+  { key: "surpriseTeam", label: "Überraschung der Saison (Team)", placeholder: "Team" },
+  { key: "disappointmentTeam", label: "Enttäuschung der Saison (Team)", placeholder: "Team" },
+  { key: "academyPlayer", label: "Bestes Eigengewächs", placeholder: "Spieler aus der eigenen Jugend" },
+  { key: "topTransfer", label: "Top Transfer der Saison", placeholder: "Spieler und Verein" },
+  { key: "flopTransfer", label: "Flop Transfer der Saison", placeholder: "Spieler und Verein" },
+  { key: "firstSacking", label: "Frühste Trainerentlassung", placeholder: "Trainer und Spieltag" },
+];
 
 const logoPaths = {
   "fc-bayern-munchen": `${BUNDESLIGA_LOGOS}/bayern-munchen.football-logos.cc.png`,
@@ -127,8 +139,8 @@ const teams = {
 };
 
 let state = loadState();
-let dragged = null;
 let pointerDrag = null;
+let submissions = loadSubmissions();
 
 function club(name, short, bg, ink, accent, shape, fontStyle) {
   const id = slug(name);
@@ -150,6 +162,7 @@ function loadState() {
     bundesliga: teams.bundesliga.map((team) => team.id),
     zweite: teams.zweite.map((team) => team.id),
     takes: { bundesliga: ["", "", ""], zweite: ["", "", ""] },
+    predictions: { bundesliga: emptyPredictions(), zweite: emptyPredictions() },
   };
 
   try {
@@ -164,9 +177,22 @@ function loadState() {
         bundesliga: normalizeTakes(stored.takes?.bundesliga),
         zweite: normalizeTakes(stored.takes?.zweite),
       },
+      predictions: {
+        bundesliga: normalizePredictions(stored.predictions?.bundesliga),
+        zweite: normalizePredictions(stored.predictions?.zweite),
+      },
     };
   } catch {
     return fallback;
+  }
+}
+
+function loadSubmissions() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(SUBMISSIONS_KEY));
+    return Array.isArray(stored) ? stored : [];
+  } catch {
+    return [];
   }
 }
 
@@ -182,8 +208,21 @@ function normalizeTakes(saved) {
   return [list[0] ?? "", list[1] ?? "", list[2] ?? ""];
 }
 
+function emptyPredictions() {
+  return Object.fromEntries(predictionFields.map((field) => [field.key, ""]));
+}
+
+function normalizePredictions(saved) {
+  const source = saved && typeof saved === "object" ? saved : {};
+  return Object.fromEntries(predictionFields.map((field) => [field.key, source[field.key] ?? ""]));
+}
+
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function saveSubmissions() {
+  localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions));
 }
 
 function getTeam(league, id) {
@@ -196,6 +235,9 @@ function render() {
   renderLeague("zweite", document.querySelector("#zweiteList"));
   renderTakes("bundesliga");
   renderTakes("zweite");
+  renderPredictions("bundesliga");
+  renderPredictions("zweite");
+  renderSubmissions();
 }
 
 function renderAuthor() {
@@ -343,49 +385,164 @@ function renderTakes(league) {
   }
 }
 
-function onDragStart(event) {
-  dragged = {
-    id: event.currentTarget.dataset.id,
-    league: event.currentTarget.dataset.league,
+function renderPredictions(league) {
+  const wrapper = document.querySelector(`.prediction-stack[data-league="${league}"]`);
+  wrapper.innerHTML = "";
+
+  predictionFields.forEach((field) => {
+    const node = document.createElement("label");
+    node.className = "prediction-field";
+    node.innerHTML = `
+      <span>${field.label}</span>
+      <input type="text" maxlength="80" placeholder="${field.placeholder}" />
+    `;
+
+    const input = node.querySelector("input");
+    input.value = state.predictions[league][field.key];
+    input.addEventListener("input", () => {
+      state.predictions[league][field.key] = input.value;
+      saveState();
+    });
+
+    wrapper.appendChild(node);
+  });
+}
+
+function createSubmission() {
+  return {
+    id: `submission-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    author: state.author.trim() || "Unbekannt",
+    leagues: {
+      bundesliga: snapshotLeague("bundesliga"),
+      zweite: snapshotLeague("zweite"),
+    },
   };
-  event.currentTarget.classList.add("dragging");
-  event.dataTransfer.effectAllowed = "move";
-  event.dataTransfer.setData("text/plain", dragged.id);
 }
 
-function onDragOver(event) {
-  event.preventDefault();
-  clearDropMarkers();
-  const row = event.currentTarget;
-  const rect = row.getBoundingClientRect();
-  const after = event.clientY > rect.top + rect.height / 2;
-  row.classList.add(after ? "drop-after" : "drop-before");
+function snapshotLeague(league) {
+  return {
+    table: state[league].map((teamId, index) => {
+      const team = getTeam(league, teamId);
+      return {
+        position: index + 1,
+        team: team.name,
+        markers: getPositionMarkers(league, index).map((marker) => marker.label),
+      };
+    }),
+    takes: [...state.takes[league]],
+    predictions: { ...state.predictions[league] },
+  };
 }
 
-function onDrop(event) {
-  event.preventDefault();
-  if (!dragged) return;
+function submitPrediction() {
+  const submission = createSubmission();
+  submissions = [submission, ...submissions];
+  saveSubmissions();
+  renderSubmissions();
+  showSubmissionsPage();
+}
 
-  const target = event.currentTarget;
-  const league = target.dataset.league;
-  if (league !== dragged.league || target.dataset.id === dragged.id) {
-    clearDropMarkers();
+function renderSubmissions() {
+  const list = document.querySelector("#submissionsList");
+  if (!list) return;
+
+  if (!submissions.length) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <strong>Noch keine Einreichungen</strong>
+        <span>Sobald eine Prediction eingereicht wird, erscheint sie hier.</span>
+      </div>
+    `;
     return;
   }
 
-  const rect = target.getBoundingClientRect();
-  const after = event.clientY > rect.top + rect.height / 2;
-  const order = state[league].filter((id) => id !== dragged.id);
-  const targetIndex = order.indexOf(target.dataset.id);
-  order.splice(targetIndex + (after ? 1 : 0), 0, dragged.id);
-  clearDropMarkers();
-  setLeagueOrder(league, order, true);
+  list.innerHTML = submissions
+    .map((submission) => submissionMarkup(submission))
+    .join("");
 }
 
-function onDragEnd() {
-  dragged = null;
-  clearDropMarkers();
-  document.querySelectorAll(".dragging").forEach((node) => node.classList.remove("dragging"));
+function submissionMarkup(submission) {
+  const created = new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(submission.createdAt));
+
+  return `
+    <details class="submission-card">
+      <summary>
+        <span>
+          <strong>${escapeHtml(submission.author)}</strong>
+          <small>${created}</small>
+        </span>
+        <span class="summary-pill">Details</span>
+      </summary>
+      <div class="submission-detail-grid">
+        ${submissionLeagueMarkup("1. Bundesliga", submission.leagues.bundesliga)}
+        ${submissionLeagueMarkup("2. Bundesliga", submission.leagues.zweite)}
+      </div>
+    </details>
+  `;
+}
+
+function submissionLeagueMarkup(title, league) {
+  const tablePreview = league.table
+    .map((row) => {
+      const markerText = row.markers.length ? ` <em>${row.markers.join(", ")}</em>` : "";
+      return `<li><strong>${row.position}.</strong> ${escapeHtml(row.team)}${markerText}</li>`;
+    })
+    .join("");
+
+  const takes = league.takes
+    .map((take, index) => `<li><strong>${index + 1}.</strong> ${escapeHtml(take || "Noch offen")}</li>`)
+    .join("");
+
+  const predictions = predictionFields
+    .map((field) => `
+      <div class="submission-prediction">
+        <span>${field.label}</span>
+        <strong>${escapeHtml(league.predictions[field.key] || "Noch offen")}</strong>
+      </div>
+    `)
+    .join("");
+
+  return `
+    <section class="submission-league">
+      <h3>${title}</h3>
+      <div class="submission-columns">
+        <div>
+          <h4>Tabelle</h4>
+          <ol class="submission-table">${tablePreview}</ol>
+        </div>
+        <div>
+          <h4>Hot Takes</h4>
+          <ol class="submission-takes">${takes}</ol>
+          <h4>Predictions</h4>
+          <div class="submission-predictions">${predictions}</div>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function showPredictionPage() {
+  document.querySelector("#predictionPage").classList.remove("is-hidden");
+  document.querySelector("#submissionsPage").classList.add("is-hidden");
+}
+
+function showSubmissionsPage() {
+  renderSubmissions();
+  document.querySelector("#predictionPage").classList.add("is-hidden");
+  document.querySelector("#submissionsPage").classList.remove("is-hidden");
 }
 
 function clearDropMarkers() {
@@ -556,7 +713,7 @@ async function exportCanvas() {
   const headerHeight = 132;
   const tableHeaderHeight = 58;
   const tableHeight = tableHeaderHeight + 18 * (rowHeight + 8) + 12;
-  const takesHeight = 252;
+  const takesHeight = 560;
   const height = margin + headerHeight + tableHeight + 24 + takesHeight + margin;
   const canvas = document.createElement("canvas");
   canvas.width = width * scale;
@@ -709,6 +866,29 @@ async function drawTakesExport(ctx, league, x, y, width, height) {
     ctx.font = "700 16px Arial, sans-serif";
     drawWrappedText(ctx, take || "Noch offen", x + 58, boxY + 26, width - 96, 18, 2);
   });
+
+  ctx.fillStyle = "#111827";
+  ctx.font = "900 24px Arial, sans-serif";
+  ctx.fillText("Predictions", x + 20, y + 254);
+
+  predictionFields.forEach((field, index) => {
+    const boxY = y + 274 + index * 33;
+    drawRoundedRect(ctx, x + 16, boxY, width - 32, 26, 7, "#ffffff");
+    ctx.fillStyle = "#64748b";
+    ctx.font = "900 11px Arial, sans-serif";
+    ctx.fillText(field.label, x + 30, boxY + 17);
+    ctx.fillStyle = "#111827";
+    ctx.font = "800 13px Arial, sans-serif";
+    drawWrappedText(
+      ctx,
+      state.predictions[league][field.key] || "Noch offen",
+      x + 260,
+      boxY + 17,
+      width - 292,
+      15,
+      1,
+    );
+  });
 }
 
 function drawPanel(ctx, x, y, width, height) {
@@ -796,53 +976,6 @@ async function downloadPng() {
   }, "image/png");
 }
 
-async function downloadPdf() {
-  const canvas = await exportCanvas();
-  const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-  const pdfBlob = createPdfFromJpeg(dataUrl, canvas.width, canvas.height);
-  downloadBlob(pdfBlob, "tabellenvorhersage-2026-27.pdf");
-}
-
-function createPdfFromJpeg(dataUrl, pixelWidth, pixelHeight) {
-  const base64 = dataUrl.split(",")[1];
-  const binary = atob(base64);
-  const imgBytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) {
-    imgBytes[index] = binary.charCodeAt(index);
-  }
-
-  const pageWidth = 595.28;
-  const pageHeight = pageWidth * (pixelHeight / pixelWidth);
-  const imageStream = binary;
-  const contentStream = `q\n${pageWidth.toFixed(2)} 0 0 ${pageHeight.toFixed(2)} 0 0 cm\n/Im0 Do\nQ\n`;
-  const objects = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth.toFixed(2)} ${pageHeight.toFixed(2)}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>`,
-    `<< /Type /XObject /Subtype /Image /Width ${pixelWidth} /Height ${pixelHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imgBytes.length} >>\nstream\n${imageStream}\nendstream`,
-    `<< /Length ${contentStream.length} >>\nstream\n${contentStream}endstream`,
-  ];
-
-  let pdf = "%PDF-1.4\n";
-  const offsets = [0];
-  objects.forEach((object, index) => {
-    offsets.push(pdf.length);
-    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
-  });
-  const xrefOffset = pdf.length;
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  offsets.slice(1).forEach((offset) => {
-    pdf += `${String(offset).padStart(10, "0")} 00000 n \n`;
-  });
-  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
-
-  const bytes = new Uint8Array(pdf.length);
-  for (let index = 0; index < pdf.length; index += 1) {
-    bytes[index] = pdf.charCodeAt(index) & 0xff;
-  }
-  return new Blob([bytes], { type: "application/pdf" });
-}
-
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -858,6 +991,7 @@ function resetAll() {
     bundesliga: teams.bundesliga.map((team) => team.id),
     zweite: teams.zweite.map((team) => team.id),
     takes: { bundesliga: ["", "", ""], zweite: ["", "", ""] },
+    predictions: { bundesliga: emptyPredictions(), zweite: emptyPredictions() },
   };
   saveState();
   render();
@@ -868,13 +1002,15 @@ document.querySelector("#authorInput").addEventListener("input", (event) => {
   saveState();
 });
 document.querySelector("#pngButton").addEventListener("click", downloadPng);
-document.querySelector("#pdfButton").addEventListener("click", downloadPdf);
+document.querySelector("#submitButton").addEventListener("click", submitPrediction);
+document.querySelector("#submissionsButton").addEventListener("click", showSubmissionsPage);
+document.querySelector("#backButton").addEventListener("click", showPredictionPage);
 document.querySelector("#resetButton").addEventListener("click", resetAll);
 
 window.__predictor = {
   exportCanvas,
-  createPdfFromJpeg,
   getState: () => JSON.parse(JSON.stringify(state)),
+  getSubmissions: () => JSON.parse(JSON.stringify(submissions)),
 };
 
 render();

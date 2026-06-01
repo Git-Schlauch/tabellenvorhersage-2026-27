@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tabellenvorhersage Saison 2026/27</title>
-    <link rel="stylesheet" href="./styles.css?v=drag-highlight-fix" />
+    <link rel="stylesheet" href="./styles.css?v=submissions" />
   </head>
   <body>
     <header class="topbar">
@@ -19,11 +19,12 @@
       <div class="actions" aria-label="Exportaktionen">
         <button id="resetButton" class="ghost" type="button">Zurücksetzen</button>
         <button id="pngButton" type="button">PNG exportieren</button>
-        <button id="pdfButton" type="button">PDF exportieren</button>
+        <button id="submitButton" type="button">Prediction einreichen</button>
+        <button id="submissionsButton" class="ghost" type="button">Einreichungen</button>
       </div>
     </header>
 
-    <main class="page-shell">
+    <main id="predictionPage" class="page-shell">
       <section class="league-grid" aria-label="Tabellenvorhersagen">
         <article class="league-panel">
           <div class="league-header">
@@ -66,6 +67,7 @@
             </div>
           </div>
           <div class="take-stack" data-league="bundesliga"></div>
+          <div class="prediction-stack" data-league="bundesliga"></div>
         </article>
 
         <article class="takes-panel">
@@ -79,10 +81,24 @@
             </div>
           </div>
           <div class="take-stack" data-league="zweite"></div>
+          <div class="prediction-stack" data-league="zweite"></div>
         </article>
       </section>
     </main>
 
-    <script src="./app.js?v=drag-highlight-fix"></script>
+    <main id="submissionsPage" class="page-shell is-hidden">
+      <section class="submissions-panel">
+        <div class="submissions-header">
+          <div>
+            <p class="eyebrow">Gespeicherte Predictions</p>
+            <h2>Einreichungen</h2>
+          </div>
+          <button id="backButton" class="ghost" type="button">Zurück zur Prediction</button>
+        </div>
+        <div id="submissionsList" class="submissions-list"></div>
+      </section>
+    </main>
+
+    <script src="./app.js?v=submissions"></script>
   </body>
 </html>
